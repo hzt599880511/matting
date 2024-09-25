@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抠图</title>
+    <style>
+        body {
+            padding: 10px;
+            margin-bottom: 100px;
+        }
+
+        * {
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei';
+        }
+
+        ::-webkit-scrollbar {
+            /* 滚动条宽 */
+            width: 0px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            /* 滚动条 拖动条 */
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            /* 滚动条背景槽 */
+            background-color: #eee;
+            border-radius: 6px;
+        }
+
+        .model {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .ball-clip-rotate>div {
+            background-color: #fff;
+            border-radius: 100%;
+            margin: 2px;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            height: 45px;
+            width: 45px;
+            background: transparent !important;
+            display: inline-block;
+            -webkit-animation: rotate 0.75s 0s linear infinite;
+            animation: rotate 0.75s 0s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                -webkit-transform: rotate(0deg) scale(1);
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                -webkit-transform: rotate(180deg) scale(0.6);
+                transform: rotate(180deg) scale(0.6);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg) scale(1);
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .file-box {
+            width: 100%;
+            min-width: 860px;
+            height: 180px;
+            background-color: rgb(247, 247, 247);
+            border-radius: 20px;
+            border: 1px solid #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a8a8a;
+        }
+
+        .file-box span {
+            color: #0ba900;
+        }
+
+        .file {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .main-box {
+            margin-top: 30px;
+            display: flex;
+            min-width: 860px;
+        }
+
+        .info-box {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #8a8a8a;
+            display: none;
+
+        }
+
+        .image-box {
+            display: flex;
+        }
+
+        .image-item {
+            margin-right: 50px;
+        }
+
+        .new-image {
+            position: relative;
+        }
+
+        .new-image::after {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAtSURBVDhPYzh+/Ph/fJgQGDVgUBpw4sQJFD4hwAClcQJkw7DhUQOGgQHH/wMAkBioMUQD6Q0AAAAASUVORK5CYII=");
+        }
+
+
+        .image-item img {
+            display: block;
+            width: 240px;
+        }
+
+        .main-right {
+            flex-grow: 1;
+        }
+
+        .btn {
+            border-radius: 20px;
+            background-color: #67C23A;
+            border: none;
+            color: #ffff;
+            text-align: center;
+            padding: 14px;
+            width: 100%;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: rgb(103, 194, 58, 0.9);
+        }
+
+        .main-right h4 {
+            margin-bottom: 15px;
+        }
+
+        .item-null {
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAtSURBVDhPYzh+/Ph/fJgQGDVgUBpw4sQJFD4hwAClcQJkw7DhUQOGgQHH/wMAkBioMUQD6Q0AAAAASUVORK5CYII=");
+        }
+
+        .color-list {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+        }
+
+        .color-item {
+            width: 80px;
+            height: 35px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #dfdfdf;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="model">
+        <div class="loader">
+            <div class="loader-inner ball-clip-rotate">
+                <div></div>
+            </div>
+        </div>
+        <div>加载中，请耐心等待...</div>
+    </div>
+
+
+    <div class="file-box">
+        <input type="file" class="file" accept="image/*">
+        <span>拖拽图片</span> 上传，或<span>选择图片</span>上传
+    </div>
+
+    <div class="main-box">
+        <div class="main-left">
+            <div class="image-box">
+                <div class="image-item image-item-img">
+                    <img class="old-image" src="https://img.picui.cn/free/2024/09/25/66f2e6e65bf23.jpg" alt="">
+                </div>
+                <div class="image-item image-item-img">
+                    <img class="new-image" src="https://img.picui.cn/free/2024/09/25/66f2e6e78872d.png" alt="">
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-title">图片详情：</div>
+                <div class="info-content">
+                    <p>1、图 片 名：<span class="file-name"></span></p>
+                    <p>3、图片格式：<span class="file-format"></span></p>
+                    <p>2、图片大小：<span class="file-size"></span></p>
+                </div>
+            </div>
+        </div>
+        <div class="main-right">
+            <button id="downloadBtn" class="btn" style="margin-bottom: 20px;">下载图片</button>
+            <h4 style="display: flex;">
+                <div id="colorValue" style="width: 150px;">HEX: </div>
+                <span id="colorValueRgb">RGB: </span>
+            </h4>
+            <h4>常用颜色：</h4>
+            <div class="color-list">
+                <div class="color-item item-null" style="background-color: none;"></div>
+                <div class="color-item" style="background-color: #ff0000;"></div>
+                <div class="color-item" style="background-color: #438EDB;"></div>
+                <div class="color-item" style="background-color: #ffffff;"></div>
+                <div class="color-item" style="background-color: #28bef9;"></div>
+                <div class="color-item" style="background-color: #0000ff;"></div>
+                <div class="color-item" style="background-color: #ffff00;"></div>
+            </div>
+            <h4>
+                选择颜色：
+            </h4>
+            <input type="color" id="colorPicker" value="#ff0000" style="width: 120px;height: 40px;">
+
+
+
+
+        </div>
+    </div>
+
+    <script>
+        // 获取相关dom元素
+        var imageBox = document.querySelector('.image-box');
+        var imageItemImg = document.querySelectorAll('.image-item-img');
+        var oldImage = document.querySelector('.old-image');
+        var newImage = document.querySelector('.new-image');
+        var infoBox = document.querySelector('.info-box');
+        var fileName = document.querySelector('.file-name');
+        var fileFormat = document.querySelector('.file-format');
+        var fileSize = document.querySelector('.file-size');
+        var fileEl = document.querySelector('.file');
+        var downloadBtn = document.querySelector('#downloadBtn');
+        var model = document.querySelector('.model');
+        var colorList = document.querySelectorAll('.color-item');
+        var fileUrl = "";
+        // 监听文件选择事件
+        fileEl.addEventListener('change', function (e) {
+
+            var file = e.target.files[0];
+            // 原图片信息
+            imageBox.style.display = 'flex';
+            infoBox.style.display = 'block';
+            oldImage.src = URL.createObjectURL(file);
+            console.log(URL.createObjectURL(file));
+            fileName.innerHTML = removeExtension(file.name);
+            fileFormat.innerHTML = getFileExtension(file.name);
+            fileSize.innerHTML = formatFileSize(file.size);
+            console.log(file);
+            // 处理图片
+            if (file) {
+                uploadFile(file);
+            }
+
+        });
+
+
+        // 上传文件
+        function uploadFile(file) {
+            model.style.display = 'flex';
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+
+            formData.append('file', file);
+
+            xhr.open('POST', 'https://api.oioweb.cn/api/ai/matting', true);
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const res = JSON.parse(xhr.responseText);
+                    console.log('File', res.result);
+                    // 插入结果图
+                    newImage.src = res.result;
+                    fileUrl = res.result;
+
+                } else {
+                    alert("服务错误！")
+                }
+                model.style.display = 'none';
+            };
+
+            xhr.onerror = function () {
+                alert("服务错误！");
+                model.style.display = 'none';
+            };
+
+
+            xhr.send(formData); // 发送请求
+        };
+        // 文件大小单位转换
+        function formatFileSize(bytes) {
+            if (bytes < 1024) {
+                return bytes + ' B';
+            } else if (bytes < 1048576) { // 小于1MB
+                return (bytes / 1024).toFixed(2) + ' KB';
+            } else if (bytes < 1073741824) { // 小于1GB
+                return (bytes / 1048576).toFixed(2) + ' MB';
+            } else {
+                return (bytes / 1073741824).toFixed(2) + ' GB';
+            }
+        };
+        // 获取文件后缀名
+        function getFileExtension(filename) {
+            return filename.split('.').pop();
+        }
+        // 删除文件后缀名
+        function removeExtension(filename) {
+            const lastIndex = filename.lastIndexOf('.');
+            if (lastIndex === -1) {
+                return filename;
+            }
+            return filename.slice(0, lastIndex);
+        }
+        // 下载图片
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            showLoading();
+            // return
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = 'file.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        // 颜色选择器
+        document.getElementById('colorPicker').addEventListener('input', (event) => {
+
+            const color = event.target.value;
+            setColor(color);
+
+        });
+        // 设置颜色信息
+        function setColor(color) {
+            const rgb = hexToRgb(color);
+            document.getElementById('colorValue').textContent = `HEX: ${color}`;
+            document.getElementById('colorValueRgb').textContent = !color ? "RGB:" : `RGB: ${rgb.r}, ${rgb.g}, ${rgb.b}`;
+            newImage.style.backgroundColor = color;
+        }
+
+        // 常用颜色选择
+        colorList.forEach(item => {
+            item.addEventListener('click', () => {
+                const color = item.style.backgroundColor;
+                var rgbValues = '';
+                var hexColor = '';
+                if (color) {
+                    rgbValues = color.match(/\d+/g).map(Number);
+                    hexColor = rgbToHex(rgbValues[0], rgbValues[1], rgbValues[2]);
+                }
+
+
+                setColor(hexColor);
+            })
+        })
+
+        // 遮盖层加载中
+        function showLoading() {
+            var loading = document.createElement("div");
+            loading.className = "loading";
+            loading.innerHTML = '<div class="loader"></div>';
+            document.body.appendChild(loading);
+            setTimeout(function () {
+                loading.style.display = "none";
+            }, 2000);
+            loading.style.display = "block";
+        }
+        // rgb转16进制 
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            return {
+                r: (bigint >> 16) & 255,
+                g: (bigint >> 8) & 255,
+                b: bigint & 255,
+            };
+        }
+
+        // rgb转16进制
+        function rgbToHex(r, g, b) {
+            return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+    </script>
+</body>
+
+</html>
